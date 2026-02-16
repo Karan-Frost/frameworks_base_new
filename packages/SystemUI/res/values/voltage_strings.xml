@@ -186,6 +186,7 @@
     <string name="quick_settings_volume_panel_label">Volume panel</string>
 
     <!-- Screenshot Tile -->
+    <string name="quick_settings_screenshot_label">Screenshot</string>
     <string name="screenshot_long_press">Long press - selected region</string>
 
     <!-- USB function dialog - copied from Settings -->
@@ -303,4 +304,5 @@
     <!-- Bluetooth battery icon -->
     <string name="bluetooth_battery_icon_title">Bluetooth battery</string>
 
+    
 </resources>
