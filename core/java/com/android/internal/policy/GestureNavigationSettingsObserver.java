@@ -155,9 +155,6 @@ public class GestureNavigationSettingsObserver extends ContentObserver {
                     Settings.Secure.getUriFor(Settings.Secure.USER_SETUP_COMPLETE),
                     false, this, UserHandle.USER_ALL);
             r.registerContentObserver(
-                    Settings.System.getUriFor(Settings.System.LOCK_GESTURE_STATUS),
-                    false, this, UserHandle.USER_ALL);
-            r.registerContentObserver(
                     Settings.Secure.getUriFor(Settings.Secure.BACK_GESTURE_ARROW),
                     false, this, UserHandle.USER_ALL);
             r.registerContentObserver(

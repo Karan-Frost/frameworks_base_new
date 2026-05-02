@@ -7079,26 +7079,6 @@ public final class Settings {
         public static final String RECENTS_LOCKED_TASKS = "recents_locked_tasks";
 
         /**
-         * GameSpace: List of added games by user
-         * @hide
-         */
-        @Readable
-        public static final String GAMESPACE_GAME_LIST = "gamespace_game_list";
-
-        /**
-         * GameSpace: Whether fullscreen intent will be suppressed while in game session
-         * @hide
-         */
-        @Readable
-        public static final String GAMESPACE_SUPPRESS_FULLSCREEN_INTENT = "gamespace_suppress_fullscreen_intent";
-
-	/**
-         * Current status of whether gestures are locked
-         * @hide
-         */
-        public static final String LOCK_GESTURE_STATUS = "lock_gesture_status";
-
-	/**
          * Whether to show or hide alert slider notifications on supported devices
          * @hide
          */
@@ -14435,15 +14415,6 @@ public final class Settings {
           * @hide
           */
          public static final String NAVBAR_LAYOUT_MODE = "navbar_layout_mode";
-
-	/**
-         * Our GameSpace can't write to device_config directly [GTS]
-         * Use this as intermediate to pass device_config property
-         * from our GameSpace to com.android.server.app.GameManagerService
-         * so we can set the device_config property from there.
-         * @hide
-         */
-        public static final String GAME_OVERLAY = "game_overlay";
 
         /**
          * Whether to allow swipe down on lockscreen to view Quick Panel
