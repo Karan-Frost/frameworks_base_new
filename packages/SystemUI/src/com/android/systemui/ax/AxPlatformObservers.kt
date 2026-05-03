@@ -34,7 +34,6 @@ import android.os.UserHandle
 import android.provider.Settings
 import android.util.Log
 import com.android.axion.platform.AxPlatformClient
-import com.android.internal.custom.hardware.LineageHardwareManager;
 import com.android.settingslib.bluetooth.LocalBluetoothManager
 import com.android.systemui.broadcast.BroadcastDispatcher
 import com.android.systemui.dagger.SysUISingleton
@@ -127,15 +126,11 @@ class AxPlatformObservers @Inject constructor(
         registerSensorPrivacy()
         registerWorkProfile()
         registerUsbTether()
-        registerDream()
-        registerReadingMode()
-        registerPowerShare()
         registerCaffeine()
         registerVpn()
         registerCast()
         registerSmartPixels()
         registerScreenRecord()
-        registerAmbientIndication()
     }
 
     private fun registerControllerCallbacks() {
@@ -275,46 +270,6 @@ class AxPlatformObservers @Inject constructor(
                 )
             }
         }, IntentFilter(UsbManager.ACTION_USB_STATE))
-    }
-
-    private fun registerDream() {
-        featureController.dreamManager ?: return
-        val filter = IntentFilter().apply {
-            addAction(Intent.ACTION_DREAMING_STARTED)
-            addAction(Intent.ACTION_DREAMING_STOPPED)
-        }
-        broadcastDispatcher.registerReceiver(object : BroadcastReceiver() {
-            override fun onReceive(ctx: Context, intent: Intent) {
-                broadcastDreamState()
-            }
-        }, filter)
-        secureSettings.registerContentObserverSync(
-            Settings.Secure.SCREENSAVER_ENABLED,
-            object : ExecutorContentObserver(mainExecutor) {
-                override fun onChange(selfChange: Boolean) {
-                    broadcastDreamState()
-                }
-            }
-        )
-        broadcastDreamState()
-    }
-
-    private fun registerReadingMode() {
-        val hw = featureController.lineageHardware ?: return
-        if (!hw.isSupported(LineageHardwareManager.FEATURE_READING_ENHANCEMENT)) return
-        stateManager.broadcastBool(
-            AxPlatformClient.FEATURE_READING_MODE,
-            hw.get(LineageHardwareManager.FEATURE_READING_ENHANCEMENT)
-        )
-    }
-
-    private fun registerPowerShare() {
-        if (!batteryController.isReverseSupported) return
-        batteryController.addCallback(powerShareCallback)
-        stateManager.broadcastBool(
-            AxPlatformClient.FEATURE_POWER_SHARE,
-            batteryController.isReverseOn
-        )
     }
 
     private val signalCallback = object : SignalCallback {
@@ -540,32 +495,6 @@ class AxPlatformObservers @Inject constructor(
         )
     }
 
-    private fun broadcastDreamState() {
-        val isDreaming = try {
-            featureController.dreamManager?.isDreaming == true
-        } catch (e: RemoteException) { false }
-        val isEnabled = stateManager.getSecureBool(Settings.Secure.SCREENSAVER_ENABLED)
-        stateManager.broadcastState(
-            AxPlatformClient.FEATURE_DREAM,
-            Bundle().apply {
-                putBoolean("enabled", isEnabled)
-                putBoolean("active", isDreaming)
-            }
-        )
-    }
-
-    private val powerShareCallback = object : BatteryController.BatteryStateChangeCallback {
-        override fun onReverseChanged(isReverse: Boolean, level: Int, name: String?) {
-            stateManager.broadcastState(
-                AxPlatformClient.FEATURE_POWER_SHARE,
-                Bundle().apply {
-                    putBoolean("enabled", isReverse)
-                    putBoolean("active", isReverse)
-                }
-            )
-        }
-    }
-
     private val mediaListener = object : NotificationMediaManager.MediaListener {
         override fun onPrimaryMetadataOrStateChanged(
             metadata: MediaMetadata?,
@@ -774,41 +703,7 @@ class AxPlatformObservers @Inject constructor(
         )
     }
 
-    private fun registerAmbientIndication() {
-        val filter = IntentFilter().apply {
-            addAction(ACTION_AMBIENT_SHOW)
-            addAction(ACTION_AMBIENT_EXPAND)
-            addAction(ACTION_AMBIENT_HIDE)
-        }
-        context.registerReceiverAsUser(
-            object : BroadcastReceiver() {
-                override fun onReceive(ctx: Context, intent: Intent) {
-                    val action = intent.action ?: return
-                    val bundle = Bundle().apply {
-                        putString("action", action)
-                        intent.extras?.let { putAll(it) }
-                    }
-                    stateManager.broadcastState(AxPlatformClient.KEY_NOW_PLAYING, bundle)
-                }
-            },
-            UserHandle.ALL,
-            filter,
-            PERMISSION_AMBIENT_INDICATION,
-            null,
-            Context.RECEIVER_EXPORTED,
-        )
-    }
-
     companion object {
         private const val TAG = "AxPlatformObservers"
-
-        private const val ACTION_AMBIENT_SHOW =
-            "com.google.android.ambientindication.action.AMBIENT_INDICATION_SHOW"
-        private const val ACTION_AMBIENT_EXPAND =
-            "com.google.android.ambientindication.action.AMBIENT_INDICATION_EXPAND"
-        private const val ACTION_AMBIENT_HIDE =
-            "com.google.android.ambientindication.action.AMBIENT_INDICATION_HIDE"
-        private const val PERMISSION_AMBIENT_INDICATION =
-            "com.google.android.ambientindication.permission.AMBIENT_INDICATION"
     }
 }

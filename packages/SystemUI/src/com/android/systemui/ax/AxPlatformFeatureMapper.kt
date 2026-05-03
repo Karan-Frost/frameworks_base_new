@@ -77,11 +77,6 @@ class AxPlatformFeatureMapper @Inject constructor(
             val mode = state.getInt("mode", 0)
             if (mode != 0) context.getString(R.string.zen_mode_on) else null
         }
-        AxPlatformClient.FEATURE_POWER_SHARE -> {
-            if (batteryController.isAodPowerSave)
-                context.getString(R.string.quick_settings_powershare_off_powersave_label)
-            else null
-        }
         AxPlatformClient.FEATURE_VPN -> {
             state.getString("name")?.takeIf { it.isNotEmpty() }
         }
@@ -127,9 +122,6 @@ class AxPlatformFeatureMapper @Inject constructor(
             AxPlatformClient.FEATURE_MIC_PRIVACY to R.string.quick_settings_mic_label,
             AxPlatformClient.FEATURE_WORK_PROFILE to R.string.quick_settings_work_mode_label,
             AxPlatformClient.FEATURE_USB_TETHER to R.string.quick_settings_usb_tether_label,
-            AxPlatformClient.FEATURE_DREAM to R.string.quick_settings_screensaver_label,
-            AxPlatformClient.FEATURE_READING_MODE to R.string.quick_settings_reading_mode,
-            AxPlatformClient.FEATURE_POWER_SHARE to R.string.quick_settings_powershare_label,
             AxPlatformClient.FEATURE_CAFFEINE to R.string.quick_settings_caffeine_label,
             AxPlatformClient.FEATURE_VPN to R.string.quick_settings_vpn_label,
             AxPlatformClient.FEATURE_CAST to R.string.quick_settings_cast_title,

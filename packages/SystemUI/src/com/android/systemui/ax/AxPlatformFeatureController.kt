@@ -35,10 +35,8 @@ import android.os.RemoteException
 import android.os.ServiceManager
 import android.os.UserHandle
 import android.provider.Settings
-import android.service.dreams.IDreamManager
 import android.util.Log
 import com.android.axion.platform.AxPlatformClient
-import com.android.internal.custom.hardware.LineageHardwareManager;
 import com.android.settingslib.bluetooth.CachedBluetoothDevice
 import com.android.settingslib.bluetooth.LocalBluetoothManager
 import com.android.systemui.dagger.SysUISingleton
@@ -85,9 +83,6 @@ class AxPlatformFeatureController @Inject constructor(
 
     internal val wakeLock: PowerManager.WakeLock =
         powerManager.newWakeLock(PowerManager.FULL_WAKE_LOCK, "AxPlatform:Caffeine")
-    private val profileManager: ProfileManager? = try {
-        ProfileManager.getInstance(context)
-    } catch (e: Exception) { null }
 
     private val nfcAdapter: NfcAdapter? = NfcAdapter.getDefaultAdapter(context)
     private val uiModeManager: UiModeManager = context.getSystemService(UiModeManager::class.java)
@@ -95,12 +90,6 @@ class AxPlatformFeatureController @Inject constructor(
         context.getSystemService(ColorDisplayManager::class.java)
     private val tetheringManager: TetheringManager? =
         context.getSystemService(TetheringManager::class.java)
-    internal val dreamManager: IDreamManager? = try {
-        IDreamManager.Stub.asInterface(ServiceManager.getService("dreams"))
-    } catch (e: Exception) { null }
-    internal val lineageHardware: LineageHardwareManager? = try {
-        LineageHardwareManager.getInstance(context)
-    } catch (e: Exception) { null }
 
     private val screenshotHelper = ScreenshotHelper(context)
     private val screenshotHandler = Handler(Looper.getMainLooper())
@@ -119,10 +108,6 @@ class AxPlatformFeatureController @Inject constructor(
             add(AxPlatformClient.FEATURE_WORK_PROFILE)
             if (tetheringManager?.isTetheringSupported == true)
                 add(AxPlatformClient.FEATURE_USB_TETHER)
-            if (dreamManager != null)
-                add(AxPlatformClient.FEATURE_DREAM)
-            if (lineageHardware?.isSupported(LineageHardwareManager.FEATURE_READING_ENHANCEMENT) == true)
-                add(AxPlatformClient.FEATURE_READING_MODE)
             if (batteryController.isReverseSupported)
                 add(AxPlatformClient.FEATURE_POWER_SHARE)
             add(AxPlatformClient.FEATURE_CAFFEINE)
@@ -224,16 +209,6 @@ class AxPlatformFeatureController @Inject constructor(
             AxPlatformClient.FEATURE_USB_TETHER -> {
                 val current = stateManager.getState(feature).getBoolean("active", false)
                 tetheringManager?.setUsbTethering(!current)
-            }
-            AxPlatformClient.FEATURE_DREAM -> try {
-                dreamManager?.let { if (it.isDreaming) it.awaken() else it.dream() }
-            } catch (e: RemoteException) {
-                Log.w(TAG, "Dream toggle failed", e)
-            }
-            AxPlatformClient.FEATURE_READING_MODE -> lineageHardware?.let {
-                val current = it.get(LineageHardwareManager.FEATURE_READING_ENHANCEMENT)
-                it.set(LineageHardwareManager.FEATURE_READING_ENHANCEMENT, !current)
-                stateManager.broadcastBool(feature, !current)
             }
             AxPlatformClient.FEATURE_POWER_SHARE ->
                 batteryController.setReverseState(!batteryController.isReverseOn)
@@ -342,15 +317,6 @@ class AxPlatformFeatureController @Inject constructor(
             AxPlatformClient.FEATURE_WORK_PROFILE ->
                 managedProfileController.setWorkModeEnabled(enabled)
             AxPlatformClient.FEATURE_USB_TETHER -> tetheringManager?.setUsbTethering(enabled)
-            AxPlatformClient.FEATURE_DREAM -> try {
-                dreamManager?.let { if (enabled) it.dream() else it.awaken() }
-            } catch (e: RemoteException) {
-                Log.w(TAG, "Dream setEnabled failed", e)
-            }
-            AxPlatformClient.FEATURE_READING_MODE -> lineageHardware?.let {
-                it.set(LineageHardwareManager.FEATURE_READING_ENHANCEMENT, enabled)
-                stateManager.broadcastBool(feature, enabled)
-            }
             AxPlatformClient.FEATURE_POWER_SHARE ->
                 batteryController.setReverseState(enabled)
             AxPlatformClient.FEATURE_CAFFEINE -> {
@@ -421,7 +387,7 @@ class AxPlatformFeatureController @Inject constructor(
         const val SETTING_NIGHT_DISPLAY = "night_display_activated"
         const val SETTING_REDUCE_BRIGHT = "reduce_bright_colors_activated"
         const val SETTING_ONE_HANDED = "one_handed_mode_enabled"
-        const val SETTING_SMART_PIXELS = "ax_smart_pixel_filter_enabled"
+        const val SETTING_SMART_PIXELS = "smart_pixels_enable"
 
         fun isDarkMode(config: Configuration): Boolean =
             (config.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
